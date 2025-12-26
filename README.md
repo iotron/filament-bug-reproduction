@@ -13,15 +13,16 @@ This repository provides a minimal reproduction for the following Filament 4 bug
 
 **Reproduction Steps:**
 1. Create an Artist record with some HTML content in the `bio` RichEditor field
-2. Save the record
-3. Edit the record and change ANY other field (e.g., `name`), but do NOT touch the RichEditor
-4. Save the form
-5. **Expected:** Form saves successfully
-6. **Actual:** TypeError is thrown
+2. Optionally add an image attachment to the RichEditor
+3. Save the record
+4. Edit the record and change ANY other field (e.g., `name`), but do NOT touch the RichEditor
+5. Save the form
+6. **Expected:** Form saves successfully
+7. **Actual:** TypeError is thrown
 
 ## Bug 2: Repeater StateCasts for JSON Columns (PR #18727)
 
-**Issue:** `foreach() argument must be of type array|object, string given` in FileUpload inside Repeater with JSON column
+**Issue:** `foreach() argument must be of type array|object, string given` in SpatieMediaLibraryFileUpload inside Repeater with JSON column
 
 **Related Issues:**
 - https://github.com/filamentphp/filament/issues/18726
@@ -30,7 +31,7 @@ This repository provides a minimal reproduction for the following Filament 4 bug
 **Reproduction Steps:**
 1. Create an Artist record
 2. Add an item to the `gallery` Repeater field
-3. Upload an image in the FileUpload component
+3. Upload an image using the SpatieMediaLibraryFileUpload component
 4. Save the record
 5. Reload/edit the record
 6. **Expected:** Form loads with the uploaded image displayed
@@ -55,6 +56,9 @@ php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
 
+# Create storage link for media
+php artisan storage:link
+
 # Create admin user
 php artisan make:filament-user
 
@@ -67,18 +71,21 @@ php artisan serve
 ```
 app/
 ├── Models/
-│   └── Artist.php          # Model with bio (text) and gallery (json) columns
+│   └── Artist.php              # Model with HasMedia trait, bio (text) and gallery (json)
 ├── Filament/
 │   └── Resources/
-│       └── ArtistResource.php  # Resource demonstrating both bugs
+│       └── ArtistResource.php  # Resource with RichEditor and Repeater+SpatieMediaLibraryFileUpload
 database/
 └── migrations/
-    └── create_artists_table.php
+    ├── create_artists_table.php
+    └── create_media_table.php  # Spatie Media Library table
 ```
 
-## Environment
+## Dependencies
 
 - PHP 8.2+
 - Laravel 11.x
 - Filament 4.x
+- Spatie Laravel Media Library 11.x
+- Filament Spatie Media Library Plugin 4.x
 - SQLite (default) or any database

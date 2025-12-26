@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 
 class ArtistResource extends Resource
 {
@@ -27,33 +28,37 @@ class ArtistResource extends Resource
                             ->maxLength(255),
                     ]),
 
-                // BUG #18718: RichEditor in HTML mode (not JSON)
+                // BUG #18718: RichEditor in HTML mode (not JSON) with file attachments
                 // Steps to reproduce:
-                // 1. Create artist with some bio content
+                // 1. Create artist with some bio content (optionally add an image attachment)
                 // 2. Edit the artist and change the name (don't touch bio)
                 // 3. Save - TypeError will be thrown
                 Forms\Components\Section::make('Biography (Bug #18718)')
-                    ->description('RichEditor stored as HTML. Edit name only and save to trigger bug.')
+                    ->description('RichEditor stored as HTML with Spatie Media attachments. Edit name only and save to trigger bug.')
                     ->schema([
                         Forms\Components\RichEditor::make('bio')
+                            ->fileAttachmentsDisk('public')
+                            ->fileAttachmentsDirectory('bio-attachments')
+                            ->fileAttachmentsVisibility('public')
                             ->columnSpanFull(),
                     ]),
 
-                // BUG #18727: Repeater with FileUpload in JSON column
+                // BUG #18727: Repeater with SpatieMediaLibraryFileUpload in JSON column
                 // Steps to reproduce:
                 // 1. Add a gallery item with an image
                 // 2. Save the artist
                 // 3. Reload/edit the artist - foreach() error will be thrown
                 Forms\Components\Section::make('Gallery (Bug #18727)')
-                    ->description('Repeater with FileUpload in JSON column. Upload image, save, then reload to trigger bug.')
+                    ->description('Repeater with SpatieMediaLibraryFileUpload in JSON column. Upload image, save, then reload to trigger bug.')
                     ->schema([
                         Forms\Components\Repeater::make('gallery')
                             ->schema([
                                 Forms\Components\TextInput::make('caption')
                                     ->required(),
-                                Forms\Components\FileUpload::make('image')
+                                SpatieMediaLibraryFileUpload::make('image')
+                                    ->collection('gallery_images')
                                     ->image()
-                                    ->directory('gallery')
+                                    ->imageEditor()
                                     ->visibility('public'),
                             ])
                             ->columns(2)
