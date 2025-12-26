@@ -5,11 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ArtistResource\Pages;
 use App\Models\Artist;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 
 class ArtistResource extends Resource
 {
@@ -17,10 +20,10 @@ class ArtistResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Forms\Components\Section::make('Basic Info')
                     ->schema([
                         Forms\Components\TextInput::make('name')
@@ -78,12 +81,12 @@ class ArtistResource extends Resource
                     ->dateTime()
                     ->sortable(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
