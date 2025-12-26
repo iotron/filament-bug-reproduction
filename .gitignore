@@ -3,9 +3,14 @@
 /public/build
 /public/hot
 /public/storage
+/public/js/filament
+/public/css/filament
+/public/fonts/filament
 /storage/*.key
 /storage/pail
 /vendor
+/bootstrap/cache/*.php
+/database/database.sqlite
 .env
 .env.backup
 .env.production
