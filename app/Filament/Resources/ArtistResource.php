@@ -4,15 +4,19 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ArtistResource\Pages;
 use App\Models\Artist;
-use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 
 class ArtistResource extends Resource
 {
@@ -24,9 +28,9 @@ class ArtistResource extends Resource
     {
         return $schema
             ->components([
-                Forms\Components\Section::make('Basic Info')
+                Section::make('Basic Info')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->required()
                             ->maxLength(255),
                     ]),
@@ -36,10 +40,10 @@ class ArtistResource extends Resource
                 // 1. Create artist with some bio content (optionally add an image attachment)
                 // 2. Edit the artist and change the name (don't touch bio)
                 // 3. Save - TypeError will be thrown
-                Forms\Components\Section::make('Biography (Bug #18718)')
+                Section::make('Biography (Bug #18718)')
                     ->description('RichEditor stored as HTML with Spatie Media attachments. Edit name only and save to trigger bug.')
                     ->schema([
-                        Forms\Components\RichEditor::make('bio')
+                        RichEditor::make('bio')
                             ->fileAttachmentsDisk('public')
                             ->fileAttachmentsDirectory('bio-attachments')
                             ->fileAttachmentsVisibility('public')
@@ -51,12 +55,12 @@ class ArtistResource extends Resource
                 // 1. Add a gallery item with an image
                 // 2. Save the artist
                 // 3. Reload/edit the artist - foreach() error will be thrown
-                Forms\Components\Section::make('Gallery (Bug #18727)')
+                Section::make('Gallery (Bug #18727)')
                     ->description('Repeater with SpatieMediaLibraryFileUpload in JSON column. Upload image, save, then reload to trigger bug.')
                     ->schema([
-                        Forms\Components\Repeater::make('gallery')
+                        Repeater::make('gallery')
                             ->schema([
-                                Forms\Components\TextInput::make('caption')
+                                TextInput::make('caption')
                                     ->required(),
                                 SpatieMediaLibraryFileUpload::make('image')
                                     ->collection('gallery_images')
@@ -75,9 +79,9 @@ class ArtistResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
             ])
