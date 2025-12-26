@@ -15,7 +15,7 @@ class ArtistResource extends Resource
 {
     protected static ?string $model = Artist::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user';
 
     public static function form(Form $form): Form
     {
