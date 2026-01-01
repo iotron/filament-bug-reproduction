@@ -9,12 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * ArtistData model - related model for Artist
- *
- * Implements HasRichContent for RichEditor file attachment support.
- * This setup triggers Bug #3 (PR #18718) when saving without editing RichEditor.
+ * NOW MATCHING JETPAX: HasMedia + HasRichContent to test if this triggers the bug!
  */
 class ArtistData extends Model implements HasMedia, HasRichContent
 {
@@ -24,12 +23,22 @@ class ArtistData extends Model implements HasMedia, HasRichContent
 
     protected $fillable = [
         'artist_id',
-        'bio',           // RichEditor content - triggers Bug #2/#3
-        'press_release', // JSON column with FileUpload - triggers Bug #1
+        'bio',
+        'press_release',
+        'gallery_items',
     ];
 
     protected $casts = [
         'press_release' => 'array',
+        'gallery_items' => 'array',
+    ];
+
+    /**
+     * Columns that contain media in JSON format - matching JetPax
+     */
+    public const MEDIA_JSON_COLUMNS = [
+        'press_release',
+        'gallery_items',
     ];
 
     public function artist(): BelongsTo
@@ -38,24 +47,25 @@ class ArtistData extends Model implements HasMedia, HasRichContent
     }
 
     /**
-     * Set up rich content for RichEditor with Spatie Media Library.
-     *
-     * BUG #3 (PR #18718): When RichEditor uses fileAttachmentProvider and
-     * the form is saved WITHOUT editing the RichEditor field, the $rawState
-     * parameter receives a string instead of ?array, causing a TypeError.
+     * Set up rich content - only register 'bio' as rich content.
+     * press_release and gallery_items are NOT rich content.
      */
     public function setUpRichContent(): void
     {
-        $this->registerRichContent('bio')
-            ->fileAttachmentProvider(
-                SpatieMediaLibraryFileAttachmentProvider::make()
-                    ->collection('bio-attachments')
-            );
+        $this->registerRichContent('bio');
     }
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('bio-attachments')
+        $this->addMediaCollection('press_release_images')
             ->useDisk('public');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(300)
+            ->height(300)
+            ->sharpen(10);
     }
 }
