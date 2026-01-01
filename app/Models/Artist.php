@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
- * Artist model with fields that reproduce Filament bugs:
- * - bio: RichEditor field stored as HTML (not JSON) with file attachments - reproduces #18718
- * - gallery: JSON column with Repeater containing SpatieMediaLibraryFileUpload - reproduces #18727
+ * Artist model - reproduces Filament bug #18727
+ *
+ * Bug trigger: Group::make()->relationship('data') with Repeater inside
+ * pointing to JSON columns on the related ArtistData model
  */
 class Artist extends Model implements HasMedia
 {
@@ -18,19 +20,20 @@ class Artist extends Model implements HasMedia
 
     protected $fillable = [
         'name',
-        'bio',
-        'gallery',
     ];
 
-    protected $casts = [
-        'gallery' => 'array',
-    ];
+    /**
+     * Relationship to ArtistData - this is key to reproducing the bug!
+     * When used with Group::make()->relationship('data'), the Repeater
+     * inside fails to apply StateCasts to JSON columns.
+     */
+    public function data(): HasOne
+    {
+        return $this->hasOne(ArtistData::class);
+    }
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('bio_attachments')
-            ->useDisk('public');
-
         $this->addMediaCollection('gallery_images')
             ->useDisk('public');
     }
