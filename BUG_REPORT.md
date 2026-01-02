@@ -21,7 +21,7 @@ https://github.com/iotron/filament-bug-reproduction
 
 ## Critical Structure Pattern
 
-Both bugs require **multiple tabs** where **each tab has its own `Group->relationship('data')`**:
+Both bugs require **3+ tabs with `Group->relationship('data')`** accessing the same HasOne relationship:
 
 ```php
 Tabs::make('tabs')
@@ -32,27 +32,45 @@ Tabs::make('tabs')
                 TextInput::make('name'),
             ]),
 
-        // Tab with Group->relationship containing BOTH components
-        Tabs\Tab::make('Press Release')
-            ->schema([
-                Group::make()
-                    ->relationship('data')
-                    ->schema([
-                        RichEditor::make('bio'),        // Bug #2
-                        Repeater::make('press_release') // Bug #1
-                            ->schema([
-                                FileUpload::make('image'),
-                            ]),
-                    ]),
-            ]),
-
-        // ANOTHER tab with Group->relationship (creates conflict)
+        // Tab 2: About - Group->relationship with RichEditor
+        // BUG #2: $rawState type error when saving without editing
         Tabs\Tab::make('About')
             ->schema([
                 Group::make()
                     ->relationship('data')
                     ->schema([
-                        TextInput::make('notes'),
+                        RichEditor::make('bio')
+                            ->label('Biography'),
+                    ]),
+            ]),
+
+        // Tab 3: Press Release - Group->relationship with FileUpload
+        // BUG #1: foreach() error when image stored as string
+        Tabs\Tab::make('Press Release')
+            ->schema([
+                Group::make()
+                    ->relationship('data')
+                    ->schema([
+                        Repeater::make('press_release')
+                            ->schema([
+                                TextInput::make('title'),
+                                TextInput::make('link'),
+                                FileUpload::make('image'),
+                            ]),
+                    ]),
+            ]),
+
+        // Tab 4: Gallery - 3rd Group->relationship (triggers Bug #1)
+        // Having 3+ tabs with Group->relationship creates state conflict
+        Tabs\Tab::make('Gallery')
+            ->schema([
+                Group::make()
+                    ->relationship('data')
+                    ->schema([
+                        Repeater::make('gallery_items')
+                            ->schema([
+                                TextInput::make('caption'),
+                            ]),
                     ]),
             ]),
     ]);
@@ -128,6 +146,15 @@ Both bugs stem from Livewire state hydration issues when:
 1. Multiple tabs each have `Group->relationship('data')` accessing the same HasOne relationship
 2. `persistTabInQueryString()` causes Livewire update cycles during tab switching
 3. State normalization doesn't run properly for child components in inactive tabs
+
+## Verification Status
+
+| Bug | Status | Notes |
+|-----|--------|-------|
+| Bug #1 (PR #18727) | **CONFIRMED** | FileUpload foreach() error triggers with 3+ tabs using Group->relationship |
+| Bug #2 (PR #18718) | **CONFIRMED** | RichEditor $rawState error triggers on save without editing |
+
+**Key Finding**: Bug #1 requires **3+ tabs** with `Group->relationship('data')` to trigger the state conflict.
 
 ## Related PRs
 

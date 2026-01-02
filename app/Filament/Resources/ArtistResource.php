@@ -40,19 +40,27 @@ class ArtistResource extends Resource
                                     ->maxLength(255),
                             ]),
 
-                        // Tab with Group->relationship containing RichEditor + Repeater
-                        // Both bugs trigger from this combined structure
+                        // Tab 2: About - Group->relationship with RichEditor
+                        // BUG #2: $rawState type error when saving without editing
+                        Tabs\Tab::make('About')
+                            ->schema([
+                                Group::make()
+                                    ->relationship('data')
+                                    ->schema([
+                                        RichEditor::make('bio')
+                                            ->label('Biography')
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
+
+                        // Tab 3: Press Release - ANOTHER Group->relationship
+                        // BUG #1: foreach() error when image stored as string
+                        // Multiple tabs with Group->relationship creates the conflict
                         Tabs\Tab::make('Press Release')
                             ->schema([
                                 Group::make()
                                     ->relationship('data')
                                     ->schema([
-                                        // BUG #2: RichEditor - $rawState type error when saving
-                                        RichEditor::make('bio')
-                                            ->label('Biography')
-                                            ->columnSpanFull(),
-
-                                        // BUG #1: Repeater+FileUpload - foreach() error
                                         Repeater::make('press_release')
                                             ->label('Press Releases')
                                             ->defaultItems(0)
@@ -78,15 +86,21 @@ class ArtistResource extends Resource
                                     ]),
                             ]),
 
-                        // Second tab with ANOTHER Group->relationship('data')
-                        // This creates the conflict that triggers bugs
-                        Tabs\Tab::make('About')
+                        // Tab 4: Extra tab with Group->relationship to trigger Bug #1
+                        // Having 3+ tabs with Group->relationship('data') creates the state conflict
+                        Tabs\Tab::make('Gallery')
                             ->schema([
                                 Group::make()
                                     ->relationship('data')
                                     ->schema([
-                                        TextInput::make('notes')
-                                            ->label('Additional Notes'),
+                                        Repeater::make('gallery_items')
+                                            ->label('Gallery Items')
+                                            ->defaultItems(0)
+                                            ->schema([
+                                                TextInput::make('caption')
+                                                    ->maxLength(255),
+                                            ])
+                                            ->collapsible(),
                                     ]),
                             ]),
 

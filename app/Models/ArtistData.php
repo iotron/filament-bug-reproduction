@@ -27,10 +27,12 @@ class ArtistData extends Model implements HasMedia, HasRichContent
         'artist_id',
         'bio',           // RichEditor content - Bug #2
         'press_release', // JSON with FileUpload paths - Bug #1
+        'gallery_items', // JSON for Gallery tab - triggers Bug #1
     ];
 
     protected $casts = [
         'press_release' => 'array',
+        'gallery_items' => 'array',
     ];
 
     public function artist(): BelongsTo
