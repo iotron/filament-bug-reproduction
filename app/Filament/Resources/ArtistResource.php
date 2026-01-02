@@ -10,7 +10,6 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -18,7 +17,6 @@ use Filament\Tables\Table;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 
 class ArtistResource extends Resource
 {
@@ -42,17 +40,19 @@ class ArtistResource extends Resource
                                     ->maxLength(255),
                             ]),
 
-                        // BUG #18727: This is the exact pattern that triggers the bug!
-                        // Group with relationship('data') containing Repeater with JSON column
+                        // Tab with Group->relationship containing RichEditor + Repeater
+                        // Both bugs trigger from this combined structure
                         Tabs\Tab::make('Press Release')
                             ->schema([
                                 Group::make()
                                     ->relationship('data')
                                     ->schema([
+                                        // BUG #2: RichEditor - $rawState type error when saving
                                         RichEditor::make('bio')
                                             ->label('Biography')
                                             ->columnSpanFull(),
 
+                                        // BUG #1: Repeater+FileUpload - foreach() error
                                         Repeater::make('press_release')
                                             ->label('Press Releases')
                                             ->defaultItems(0)
@@ -78,25 +78,18 @@ class ArtistResource extends Resource
                                     ]),
                             ]),
 
-                        Tabs\Tab::make('Gallery')
+                        // Second tab with ANOTHER Group->relationship('data')
+                        // This creates the conflict that triggers bugs
+                        Tabs\Tab::make('About')
                             ->schema([
                                 Group::make()
                                     ->relationship('data')
                                     ->schema([
-                                        Repeater::make('gallery_items')
-                                            ->label('Gallery Items')
-                                            ->defaultItems(0)
-                                            ->schema([
-                                                TextInput::make('caption')
-                                                    ->required(),
-                                                SpatieMediaLibraryFileUpload::make('image')
-                                                    ->collection('gallery_images')
-                                                    ->image(),
-                                            ])
-                                            ->columns(2)
-                                            ->collapsible(),
+                                        TextInput::make('notes')
+                                            ->label('Additional Notes'),
                                     ]),
                             ]),
+
                     ]),
             ]);
     }
